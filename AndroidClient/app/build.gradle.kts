@@ -17,12 +17,16 @@ android {
         targetSdk = 34
         versionCode = computedVersionCode
         versionName = appVersion
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            // Intentionally do not fall back to signingConfigs.debug here.
+            // Local release builds may be unsigned; distribution signing must
+            // be supplied by the release environment rather than committed
+            // debug credentials.
         }
     }
 
@@ -55,4 +59,8 @@ dependencies {
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
 
     testImplementation("junit:junit:4.13.2")
+
+    androidTestImplementation("androidx.test:core:1.5.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:runner:1.5.2")
 }
