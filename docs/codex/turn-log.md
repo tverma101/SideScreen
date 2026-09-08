@@ -59,3 +59,16 @@
 - `next`: review or open a PR from the published topic branch if desired; default-branch integration remains separately authorized work
 - `learning_checkpoint`: `promoted`: scoped topic-branch publication after a clean audited baseline; `quarantined`: none; `skipped`: default-branch integration and Actions
 - `rollout_refs`: current Codex session
+
+## 2026-09-07 — Local-work coverage audit
+
+- `scope`: canonical checkout, all registered SideScreen worktrees, local branches, stashes, and ignored generated artifacts after publishing `codex/wireless-60fps-native`
+- `changed`: no source changes; this audit record is the only repository update
+- `validation`: canonical worktree is clean with local `HEAD` equal to `origin/codex/wireless-60fps-native`; the published branch contains the Android and Mac changes; the remote S Pen branch history is already an ancestor; `codex/android-bridge-hardening` at `64dd35c` has no remote containing its tip; two stashes retain Android/Mac files; a separate S Pen worktree has only untracked `.project-memory` metadata; ignored APK/build/DMG/app artifacts remain local
+- `evidence`: requested branch fully committed and pushed; separate local-only branch, stashes, ignored build/recovery outputs, and a prunable stale detached worktree are not part of that push; no local-only branch or stash was deleted or published
+- `blocker`: none for the requested branch; integrating or publishing the separate bridge-hardening branch would require a distinct scope decision
+- `cleanup`: no destructive cleanup performed; stale worktree was only identified with `git worktree prune --dry-run`; ignored artifacts and stashes were preserved
+- `git`: current topic branch remains the only branch changed/published for this request; no PR, merge, default-branch, workflow, or Actions mutation
+- `next`: if broader publication is desired, review `codex/android-bridge-hardening` and the two stashes independently before pushing; generated APK/DMG/app outputs should remain release artifacts rather than Git source
+- `learning_checkpoint`: `promoted`: clean/pushed topic branch is distinct from other local refs and generated outputs; `quarantined`: bridge-hardening branch and stashes pending scope review; `skipped`: destructive cleanup and unrelated branch publication
+- `rollout_refs`: current Codex session
