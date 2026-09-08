@@ -85,3 +85,16 @@
 - `next`: keep using the canonical `scripts/install_mac.sh`/`scripts/run.sh` lifecycle; remeasure wired 120-FPS visual behavior only with the representative Android device/workload, not from artifact identity alone
 - `learning_checkpoint`: `promoted`: backup-before-consolidation plus exact-install-root cleanup preserves the known-good artifact while removing active duplicates; `quarantined`: none; `deprecated`: none; `skipped`: global memory update and destructive Trash emptying
 - `rollout_refs`: current Codex session
+
+## 2026-09-08 — Compact macOS UI preserved after design review
+
+- `scope`: macOS settings surface review with the user's efficiency and connection priorities
+- `changed`: no product source change retained; evaluated a temporary native split-view redesign, then reverted `MacHost/Sources/SettingsWindow.swift` and removed `MacHost/Sources/ModernSettingsView.swift` after live inspection and user feedback; preserved the existing app/DMG backup set
+- `validation`: the temporary redesign passed `swift test --package-path MacHost` with 61 tests; `git diff --check` passed after the revert; `./scripts/build_mac.sh` and `./scripts/install_mac.sh --launch` rebuilt and installed the compact UI; the installed app passed deep code-signature verification; live macOS accessibility inspection showed the original compact 480×780 single-scroll surface; `SideScreen_connectionMode=usb` and `SideScreen_refreshRate=120` remained intact
+- `evidence`: compact UI restoration is implemented, installed, and live-verified; the user's preference for the compact layout is recorded; no sustained wireless 60-FPS or wired visual remeasurement was performed in this design-review turn
+- `blocker`: broad macOS layout redesign is paused; the next change must preserve the compact window and improve connection/readiness efficiency incrementally
+- `cleanup`: stopped the rejected redesign build before reinstalling the compact app; no source checkout, branch, backup, DMG, or unrelated app was removed; the rejected temporary file is absent and the worktree is clean before this documentation entry
+- `git`: documentation-only follow-up; no default-branch, PR, workflow, or Actions mutation
+- `next`: target the existing compact surface with small connection-first improvements such as clearer readiness state, lower-friction start/reconnect behavior, and efficient performance feedback without replacing the layout
+- `learning_checkpoint`: `promoted`: compact, incremental macOS changes fit the user's stated efficiency/connection goal; `quarantined`: the temporary split-view redesign; `skipped`: global memory update and another broad visual redesign
+- `rollout_refs`: current Codex session
