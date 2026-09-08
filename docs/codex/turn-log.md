@@ -111,3 +111,16 @@
 - `next`: measure the installed backend with the Android device under USB and wireless reconnect/motion workloads, keeping the compact UI unchanged
 - `learning_checkpoint`: `promoted`: backend efficiency changes must stay below the UI boundary; `quarantined`: second-Start/status-strip experiment; `skipped`: broad UI redesign, global memory update, and a new live stream run
 - `rollout_refs`: current Codex session
+
+## 2026-09-08 — Harden Android decoder handoff and fresh APK installs
+
+- `scope`: Android frame-delivery lifecycle, asynchronous `MediaCodec` input handoff, and the local APK install pipeline; macOS UI unchanged
+- `changed`: generation-tagged Android decoder input-buffer callbacks reject retired-codec indices; decoder publication is visible to the socket thread; a frame arriving before decoder startup releases safely and requests a throttled sync frame; `scripts/install_android.sh` now rebuilds the debug APK by default with an explicit `--skip-build` escape hatch; updated `README.md` and `CHANGELOG.md`
+- `validation`: `(cd AndroidClient && ./gradlew --no-daemon testDebugUnitTest assembleDebug)` passed; `swift test --package-path MacHost` passed 61 tests with 0 failures; `git diff --check` and `bash -n scripts/install_android.sh scripts/build_android.sh scripts/backup_android_apks.sh` passed; the fresh debug APK was generated at `AndroidClient/app/build/outputs/apk/debug/app-debug.apk`, verified with Android SDK `apksigner` v2, and identified as package `com.sidescreen.app` version `0.11.2`; the installer correctly exits without mutation when ADB has no device
+- `evidence`: Android source implementation and JVM/build validation are proven; no APK installation or live USB/wireless stream run was possible in this turn because `adb devices -l` returned no connected device; sustained 60-FPS and user-confirmed Android acceptance remain unproven
+- `blocker`: reconnect the representative SM-X800 (or another Android target) over ADB for install, handshake, decoder, reconnect, and sustained-motion validation
+- `cleanup`: no device, app package, reverse mapping, Mac stream, backup, or unrelated file was changed; existing APK recovery backups remain preserved
+- `git`: Android source, installer, README, changelog, and this turn record are local changes on `codex/wireless-60fps-native`; topic-branch publication remains authorized, but will follow final audit
+- `next`: with the tablet connected, run `./scripts/install_android.sh`, capture `adb logcat` plus host logs, verify first-frame startup and reconnect, then measure a moving workload at the native 60-FPS wireless target
+- `learning_checkpoint`: `promoted`: asynchronous decoder lifecycle must fence callback state by codec generation; `quarantined`: the exact user-reported runtime failure cause until a device trace is captured; `skipped`: global memory update and broad UI work
+- `rollout_refs`: current Codex session
