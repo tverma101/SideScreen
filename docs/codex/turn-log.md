@@ -98,3 +98,16 @@
 - `next`: target the existing compact surface with small connection-first improvements such as clearer readiness state, lower-friction start/reconnect behavior, and efficient performance feedback without replacing the layout
 - `learning_checkpoint`: `promoted`: compact, incremental macOS changes fit the user's stated efficiency/connection goal; `quarantined`: the temporary split-view redesign; `skipped`: global memory update and another broad visual redesign
 - `rollout_refs`: current Codex session
+
+## 2026-09-08 — Revert UX experiment and optimize backend hot paths
+
+- `scope`: restore the compact macOS settings surface and improve macOS connection/capture efficiency without changing UX
+- `changed`: reverted the extra connection-status/second-Start UI from `6b5f8b9` in `e67b2ed`; moved ADB/path/process status probes off the main actor; prevented overlapping USB status probes and self-healing ADB repairs; made cached ADB path reads thread-safe; latched per-session capture flags so the frame callback avoids repeated connection-mode and experiment-preference reads; documented the backend work in `CHANGELOG.md`
+- `validation`: `git diff --check` passed; `swift test --package-path MacHost` passed 61 tests with 0 failures; `./scripts/build_mac.sh` produced a signed universal app and DMG; `./scripts/install_mac.sh --launch` installed the backend build with valid deep code signing and created 0 snapshots; live accessibility inspection showed the original compact single-scroll window with exactly one Start button; the app remains configured for USB and 120 Hz
+- `evidence`: UX reversion, backend source implementation, tests, packaging, installation, and live compact UI state are proven; no tablet stream was started during this backend-only turn, so no new sustained wireless FPS or reconnect trace is claimed
+- `blocker`: none for the backend changes; real-device connection/reconnect and sustained wireless performance still need a representative Android workload
+- `cleanup`: retained the existing recoverable app/DMG backup; no duplicate app snapshot was created; no source checkout, branch, device, display session, or unrelated app was removed
+- `git`: local revert plus backend-only follow-up is ready for the already-authorized `codex/wireless-60fps-native` topic branch; no default-branch, PR, workflow, or Actions mutation
+- `next`: measure the installed backend with the Android device under USB and wireless reconnect/motion workloads, keeping the compact UI unchanged
+- `learning_checkpoint`: `promoted`: backend efficiency changes must stay below the UI boundary; `quarantined`: second-Start/status-strip experiment; `skipped`: broad UI redesign, global memory update, and a new live stream run
+- `rollout_refs`: current Codex session
