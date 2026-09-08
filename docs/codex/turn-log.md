@@ -138,3 +138,16 @@
 - `next`: after the tablet appears in `adb devices -l` as `device`, run `./scripts/install_android.sh`, verify `adb reverse` ports `54321/54322`, then capture Android logcat and a wired first-frame/reconnect trace before claiming the live Android path is fixed
 - `learning_checkpoint`: `promoted`: one SDK-first ADB resolver must be shared by Mac discovery, reverse setup, and Android installers; `quarantined`: the exact physical connection fault until the tablet enumerates; `skipped`: UI redesign, broad cleanup, and global memory update
 - `rollout_refs`: current Codex session
+
+## 2026-09-08 — Live wired APK install and first-frame verification
+
+- `scope`: representative SM-X800 USB install, ADB reverse tunnel, Mac host startup, Android first-frame decode, and current wired stability
+- `changed`: no product source change; installed the current debug APK through the repaired SDK-first ADB pipeline and captured live evidence after the tablet reappeared on USB
+- `validation`: ADB reported `R52X30G5TNB` as `device` / `SM_X800`; macOS enumerated `SAMSUNG_Android`; `./scripts/install_android.sh` rebuilt and installed version `0.11.2` with APK SHA-256 `535913fd2ded8da591d4d25ac89ea98ee7d4bcfad3f64dd743a7e89ef6f865a6`; reverse mappings `54321` and `54322` were active; the installed Android client connected to `127.0.0.1:54321`; the Mac host listened on both ports; `c2.qti.hevc.decoder` rendered `2800x1752` at a `120 Hz` target with limited color range; a direct tablet screenshot showed the streamed Mac desktop; a sustained sample reached 1,860 received / 1,859 decoded frames with zero drops and zero input-buffer timeouts, approximately 9–10 ms average decoder latency, and low-millisecond control RTTs
+- `evidence`: APK installation, USB reverse forwarding, Mac listener, Android handshake, first decoded frame, native 120-Hz decoder selection, rendered desktop, and sustained wired stability are live-proven; user-confirmed visual color acceptance remains separate
+- `blocker`: none for the current wired connection path; remaining acceptance is the user's visual confirmation of color/appearance under their normal desktop workload and a separate longer workload-specific FPS measurement if needed
+- `cleanup`: retained the new APK backup at `/Users/tejas/Projects/SideScreen/backups/apk/20260908T213430Z`; left the validated wired stream running; no source checkout or backup artifact was removed
+- `git`: documentation-only evidence update on the already-published `codex/wireless-60fps-native` branch; no default-branch, PR, workflow, or Actions mutation
+- `next`: visually confirm the streamed wired desktop/colors; if the user reports a remaining mismatch, capture paired host/tablet pixel samples while this same live path is connected
+- `learning_checkpoint`: `promoted`: the prior no-device state was an external USB enumeration condition, and the repaired SDK-first pipeline installs/forwards correctly once the device appears; `quarantined`: none; `skipped`: UI redesign and global memory update
+- `rollout_refs`: current Codex session
