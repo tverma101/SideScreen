@@ -34,3 +34,17 @@
 - `git`: local topic branch only, no push, merge, PR, workflow, or Actions mutation
 - `next`: use `./scripts/install_mac.sh --launch` or `./script/build_and_run.sh`; do not invoke the historical installer in an old worktree, since only the canonical repository path now performs backup-free replacement
 - `rollout_refs`: current Codex session
+
+## 2026-09-07 — Wired SDR color-range alignment
+
+- `scope`: macOS wired ScreenCaptureKit/CGDisplayStream SDR capture, Android hardware-decoder range signaling, and the installed USB path
+- `changed`: made 8-bit video-range `420v` the normal capture format; retained legacy `SideScreen_exp_pixelFormat=8bit` as an explicit full-range A/B control; made the CGDisplayStream fallback follow the selected 8-bit range; taught `PatternInjector` to encode luma/chroma in the destination range; added `VideoColorProfile` tests; updated `README.md` and `CHANGELOG.md`
+- `files`: `MacHost/Sources/VideoColorProfile.swift`, `MacHost/Sources/ScreenCapture.swift`, `MacHost/Sources/PatternInjector.swift`, `MacHost/Tests/SideScreenTests/VideoColorProfileTests.swift`, `README.md`, `CHANGELOG.md`
+- `validation`: local Swift suite passed 61 tests with 0 failures; `git diff --check` passed; `./scripts/build_mac.sh` produced the signed universal app and DMG; `./scripts/install_mac.sh --launch` installed version 0.11.2 with valid code signing and created 0 app snapshots; the installed sender logged `Stream color profile: 8-bit video`; the connected SM-X800 reported Android decoder `color-range=2 (limited)`, zero decode drops, and repeated frame milestones at the expected 60 Hz receiver cadence with approximately 9–12 ms decode latency
+- `evidence`: implemented, tested, packaged, installed, and live wired range/decoder behavior are proven; visual user-confirmed color acceptance is not recorded; sustained wireless 60 FPS remains separately bounded by the prior live evidence
+- `blocker`: none for the range implementation; user visual confirmation is still the final acceptance boundary for the reported color symptom
+- `cleanup`: temporary auto-start was restored/deleted after validation, and the connected Mac/Android test session plus ADB reverse mappings will be stopped/removed before handoff; the single installed app remains in `~/Applications`, and prior duplicate bundles remain recoverable in Trash
+- `git`: local topic branch only, no push, merge, PR, workflow, or Actions mutation
+- `next`: visually recheck a representative wired desktop with the installed build; if colors remain wrong, capture paired PixelCopy measurements with default `420v` and explicit `420f` to distinguish a remaining display profile issue from range expansion
+- `learning_checkpoint`: `promoted`: source contract plus same-device A/B evidence and current live logs support the limited-range wired SDR fix; `quarantined`: none; `deprecated`: full-range as the normal SDR default; `skipped`: global memory update
+- `rollout_refs`: current Codex session
