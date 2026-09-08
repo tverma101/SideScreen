@@ -72,3 +72,16 @@
 - `next`: if broader publication is desired, review `codex/android-bridge-hardening` and the two stashes independently before pushing; generated APK/DMG/app outputs should remain release artifacts rather than Git source
 - `learning_checkpoint`: `promoted`: clean/pushed topic branch is distinct from other local refs and generated outputs; `quarantined`: bridge-hardening branch and stashes pending scope review; `skipped`: destructive cleanup and unrelated branch publication
 - `rollout_refs`: current Codex session
+
+## 2026-09-08 — Recoverable macOS artifact consolidation
+
+- `scope`: SideScreen macOS app bundles, legacy installer snapshots, and all discovered SideScreen DMGs across the canonical and historical local worktrees
+- `changed`: no product source; created `/Users/tejas/Documents/SideScreen-Backups.noindex/20260908T170622Z`; copied all five discovered DMGs with source-qualified names; backed up the installed and canonical 0.11.2 bundles; moved the last-used Design-worktree 0.11.2 bundle and the historical PR43 0.11.1 bundle into the backup; moved 46 legacy `SideScreen.app.previous.*` bundles out of `~/.Trash` into the backup
+- `validation`: every DMG backup matched its source SHA-256 and passed `hdiutil verify`; all four preserved app bundles passed deep code-signature verification; the installed `/Users/tejas/Applications/SideScreen.app` remains version 0.11.2 and valid; `SideScreen_refreshRate=120`; the cleanup helper dry-run found zero stale snapshots; the exact Spotlight app-bundle query returned only the user install; no SideScreen process was running
+- `evidence`: recoverable backup and filesystem cleanup are proven; the installed artifact and configured 120-FPS wired target are preserved; no new stream or visual acceptance run was performed, so live sustained 120-FPS behavior and user-confirmed visual acceptance remain separate evidence states
+- `blocker`: none for duplicate cleanup or artifact preservation; the backup directory is intentionally retained and the macOS Trash was not emptied globally
+- `cleanup`: `~/Applications` contains one user-facing SideScreen.app; historical generated app bundles are absent from their two non-canonical worktrees; no source checkout, branch, stash, or unrelated Trash item was removed
+- `git`: documentation-only turn record; no default-branch, PR, workflow, or Actions mutation
+- `next`: keep using the canonical `scripts/install_mac.sh`/`scripts/run.sh` lifecycle; remeasure wired 120-FPS visual behavior only with the representative Android device/workload, not from artifact identity alone
+- `learning_checkpoint`: `promoted`: backup-before-consolidation plus exact-install-root cleanup preserves the known-good artifact while removing active duplicates; `quarantined`: none; `deprecated`: none; `skipped`: global memory update and destructive Trash emptying
+- `rollout_refs`: current Codex session
