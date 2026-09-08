@@ -48,3 +48,14 @@
 - `next`: visually recheck a representative wired desktop with the installed build; if colors remain wrong, capture paired PixelCopy measurements with default `420v` and explicit `420f` to distinguish a remaining display profile issue from range expansion
 - `learning_checkpoint`: `promoted`: source contract plus same-device A/B evidence and current live logs support the limited-range wired SDR fix; `quarantined`: none; `deprecated`: full-range as the normal SDR default; `skipped`: global memory update
 - `rollout_refs`: current Codex session
+
+## 2026-09-07 — Topic branch publication
+
+- `scope`: Git publication of the SideScreen Android and macOS work from the canonical checkout
+- `changed`: pushed commits `edb14aa`, `66ede46`, and `d468d1a` from `codex/wireless-60fps-native` to `origin/codex/wireless-60fps-native`; no default branch, PR, merge, workflow, or Actions state changed
+- `validation`: clean worktree before push; remote accepted the new branch; the remote branch points at `d468d1a`; the published range contains both `AndroidClient` and `MacHost` paths
+- `evidence`: source changes, tests, packaging, installation, and live evidence remain documented in the preceding entries; branch publication is proven; user-confirmed acceptance is not recorded
+- `blocker`: none for the requested topic-branch push
+- `next`: review or open a PR from the published topic branch if desired; default-branch integration remains separately authorized work
+- `learning_checkpoint`: `promoted`: scoped topic-branch publication after a clean audited baseline; `quarantined`: none; `skipped`: default-branch integration and Actions
+- `rollout_refs`: current Codex session
