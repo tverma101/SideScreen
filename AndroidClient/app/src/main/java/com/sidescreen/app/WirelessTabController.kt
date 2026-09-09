@@ -1,10 +1,14 @@
 package com.sidescreen.app
 
-import android.app.Activity
 import android.content.Intent
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 /**
  * Six-state UI machine for the Wireless tab on Android.
@@ -15,7 +19,7 @@ import android.widget.TextView
  *   ⑥ permission denied permanently
  */
 class WirelessTabController(
-    private val activity: Activity,
+    private val activity: AppCompatActivity,
     private val views: Views,
     private val storage: PairedHostStorage,
     private val cameraPerm: CameraPermissionManager,
@@ -57,19 +61,14 @@ class WirelessTabController(
     private val discovery = SideScreenDiscovery(activity.applicationContext)
     private var discoveryRecoveryArmed = true
     private var discoveryRecoveryInFlight = false
+    private var pendingPairingSave: Job? = null
 
     fun bind() {
         views.scanButton.setOnClickListener { triggerScan() }
         views.rescanButton.setOnClickListener { triggerScan() }
         views.openSettingsButton.setOnClickListener { cameraPerm.openAppSettings() }
-        views.forgetButton.setOnClickListener {
-            storage.clear()
-            transition(State.FIRST_TIME)
-        }
-        views.idleForgetButton.setOnClickListener {
-            storage.clear()
-            transition(State.FIRST_TIME)
-        }
+        views.forgetButton.setOnClickListener { forgetPairing() }
+        views.idleForgetButton.setOnClickListener { forgetPairing() }
         views.reconnectButton.setOnClickListener {
             val entry =
                 storage.load() ?: run {
@@ -80,6 +79,14 @@ class WirelessTabController(
             showConnecting("Reconnecting to ${entry.macName}", "${entry.host}:${entry.port}")
             attemptReconnect(entry)
         }
+    }
+
+    private fun forgetPairing() {
+        cancelPendingPairingSave()
+        // clear() is intentionally synchronous: Forget Pairing is a security
+        // boundary and must durably invalidate storage before this action returns.
+        storage.clear()
+        transition(State.FIRST_TIME)
     }
 
     /**
@@ -141,15 +148,20 @@ class WirelessTabController(
     fun onScanResult(url: String) {
         val parsed = PairingURL.parse(url) ?: return
         val deviceName = (android.os.Build.MODEL ?: "Android").take(64)
-        storage.save(
+        val entry =
             PairedHostStorage.Entry(
                 host = parsed.host,
                 port = parsed.port,
                 token = parsed.token,
                 macName = parsed.macName,
                 controlPortOverride = parsed.controlPortOverride,
-            ),
-        )
+            )
+
+        // AndroidKeyStore initialization can involve secure hardware. Start the
+        // live connection from the QR credential immediately and persist it on
+        // IO; PairedHostStorage's mutation generation remains the final fence
+        // against stale saves after a newer scan or Forget Pairing.
+        persistPairing(entry)
         discoveryRecoveryArmed = true
         showConnecting("Connecting to ${parsed.macName}", "${parsed.host}:${parsed.port}")
         onConnectRequested(parsed.host, parsed.port, parsed.token, deviceName, parsed.macName)
@@ -204,16 +216,34 @@ class WirelessTabController(
             }
 
             val updated = entry.copy(host = endpoint.host, port = endpoint.port)
-            try {
-                storage.save(updated)
-            } catch (e: Exception) {
-                android.util.Log.w("WirelessTabController", "Couldn't persist recovered endpoint", e)
-            }
+            persistPairing(updated)
             val deviceName = (android.os.Build.MODEL ?: "Android").take(64)
             showConnecting("Reconnecting to ${updated.macName}", "${updated.host}:${updated.port}")
             onConnectRequested(updated.host, updated.port, updated.token, deviceName, updated.macName)
         }
         return true
+    }
+
+    @Synchronized
+    private fun persistPairing(entry: PairedHostStorage.Entry) {
+        pendingPairingSave?.cancel()
+        pendingPairingSave =
+            activity.lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    storage.save(entry)
+                } catch (e: Exception) {
+                    DiagLog.log(
+                        "PAIR",
+                        "Pairing persistence failed before secure storage: ${e.javaClass.simpleName}",
+                    )
+                }
+            }
+    }
+
+    @Synchronized
+    private fun cancelPendingPairingSave() {
+        pendingPairingSave?.cancel()
+        pendingPairingSave = null
     }
 
     private fun showNetworkRepair(cached: PairedHostStorage.Entry?) {
