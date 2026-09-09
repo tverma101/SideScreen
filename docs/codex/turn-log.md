@@ -164,3 +164,70 @@
 - `next`: keep the compact menu unchanged; only revisit brightness behavior if a user reports Android panel-specific range or permission differences
 - `learning_checkpoint`: `promoted`: menu brightness should use the existing capability-gated control channel and queue the latest value across startup negotiation; `quarantined`: none; `skipped`: broad UI redesign, keyboard event taps, and global memory update
 - `rollout_refs`: current Codex session
+
+## 2026-09-09 — Wireless recovery action and Android reconnect UX
+
+- `scope`: Android wireless failure recovery, cached/in-session pairing state, QR-versus-Reconnect action hierarchy, explicit Disconnect state, and the QR control-port handoff
+- `baseline`: canonical `/Users/tejas/Projects/SideScreen` on `codex/wireless-60fps-native`; three Android files were already dirty before this turn and were preserved while the repair was layered onto them
+- `changed`: `AndroidClient/app/src/main/java/com/sidescreen/app/WirelessTabController.kt`, `MainActivity.kt`, `WirelessRecoveryActions.kt`, `activity_main.xml`, `WirelessRecoveryActionsTest.kt`, `README.md`, `CHANGELOG.md`, and this turn record
+- `validation`: `(cd AndroidClient && ./gradlew testDebugUnitTest assembleDebug --no-daemon)` passed; the new recovery-action policy tests passed with the existing Android JVM suite; `git diff --check` passed; debug APK generated at `AndroidClient/app/build/outputs/apk/debug/app-debug.apk` with SHA-256 `1c1d422e7257f2bbf7afacedb6dafee8ade517b71170effc80e954e3081e945e`; Mac listener was observed on TCP ports `54321` and `54322`
+- `evidence`: source implementation, unit/build validation, resource binding, and APK packaging are proven; installation, live Android UI inspection, wireless handshake, and user-confirmed reconnect behavior are not yet proven in this turn
+- `blocker`: `adb devices -l` and `adb mdns services` both returned no tablet, so the new APK could not be installed or exercised; enabling wireless ADB on the tablet alone has not yet produced a paired/connected ADB transport on this Mac
+- `cleanup`: no device package, ADB pairing, reverse mapping, host listener, source worktree, or unrelated file was removed; the existing running Mac listener was left unchanged
+- `git`: local topic-branch changes only; no commit, push, PR, merge, workflow, or Actions mutation
+- `next`: make the tablet appear in `adb devices -l` as `device` (wireless ADB pairing may require the tablet's IP plus pairing port/code), run `./scripts/install_android.sh`, then capture Android logcat and a real error → **Reconnect** → first-frame trace
+- `learning_checkpoint`: `promoted`: cached pairing state must remain a valid recovery credential even when a secure preference read/write is temporarily unavailable; `quarantined`: the original live failure cause until the new APK is installed and the tablet logs are captured; `skipped`: global memory update, default-branch integration, and publication
+- `rollout_refs`: current Codex session
+
+## 2026-09-09 — Live USB install, Wi-Fi-scoped discovery, and multicast permission repair
+
+- `scope`: install the wireless recovery build on the representative SM-X800, exercise the stale-pair failure UI, and repair Android Bonjour discovery prerequisites
+- `changed`: added active-Wi-Fi network scoping and a short released multicast lock to `AndroidClient/app/src/main/java/com/sidescreen/app/SideScreenDiscovery.kt`; declared `ACCESS_WIFI_STATE` and `CHANGE_WIFI_MULTICAST_STATE` in `AndroidClient/app/src/main/AndroidManifest.xml`; retained the Reconnect-first recovery UI from the preceding entry
+- `validation`: `(cd AndroidClient && ./gradlew testDebugUnitTest assembleDebug --no-daemon)` passed with 37 tests and 0 failures; `git diff --check` passed; APK SHA-256 is `a123629bd7c5e3383b4c98cd89cdb018de6839367032947a228b573ccb84cf8e`; `./scripts/install_android.sh --skip-build` installed it successfully and preserved the pairing; ADB reports `R52X30G5TNB` / `SM_X800`, USB reverse mappings `54321` and `54322`, and the multicast permission is granted
+- `evidence`: live Android UI shows `⚠ Couldn't reach Mac` with primary `RECONNECT` and secondary `SCAN QR INSTEAD`; the Mac app was started and listens on `54321`/`54322`; a tablet TCP probe reached the Mac listener and was rejected only for missing SideScreen handshake bytes; the repaired app acquires and releases `SideScreenDiscovery` multicast lock successfully and binds NSD to Wi-Fi network `101`
+- `blocker`: the cached pairing still points to `192.168.1.88`, while the current Mac is `10.0.22.156`; the tablet did not receive the advertised Bonjour service during the bounded retry even with Wi-Fi scoping and multicast permission, so an end-to-end authenticated wireless stream and automatic endpoint replacement remain unproven on this Wi-Fi; QR is no longer forced by the failure UI, but a new QR may still be needed if this network suppresses mDNS
+- `cleanup`: retained recoverable APK backups at `backups/apk/20260909T191043Z`, `20260909T191721Z`, and `20260909T191945Z`; left the Mac listener running; no pairing data, app data, source checkout, or unrelated file was removed
+- `git`: local changes only on `codex/wireless-60fps-native`; no commit, push, PR, default-branch, workflow, or Actions mutation
+- `next`: retry on a Wi-Fi path that forwards Bonjour/mDNS between the Mac and tablet; if it still fails, capture the network's multicast policy before changing the pairing flow again
+- `learning_checkpoint`: `promoted`: wireless recovery must retain the cached credential, scope discovery to the active Wi-Fi network, and release multicast reception after the bounded lookup; `quarantined`: network-specific mDNS suppression as an external condition; `skipped`: publication, global memory update, and default-branch integration
+- `rollout_refs`: current Codex session
+
+## 2026-09-09 — Wireless transport fallback and live USB proof
+
+- `scope`: finish the live Android connection path, repair route selection for wireless video/control sockets, and verify the same installed build through the available USB transport
+- `baseline`: canonical `/Users/tejas/Projects/SideScreen` on `codex/wireless-60fps-native`; the Mac host is `10.0.22.156`, the representative SM-X800 is `10.0.33.245` on WiFi network `101`, and the cached pairing token was preserved while its stale host endpoint was updated to the current Mac address
+- `changed`: `AndroidClient/app/src/main/java/com/sidescreen/app/StreamClient.kt` and `ControlChannel.kt` now try the process-default route before the explicit WiFi `Network` route; `README.md`, `CHANGELOG.md`, and this turn record document client-isolation diagnosis and the fallback behavior
+- `validation`: after the route patch, `(cd AndroidClient && ./gradlew testDebugUnitTest assembleDebug --no-daemon)` passed with 37 tests and 0 failures; `./scripts/install_android.sh --skip-build` installed the debug APK and restored USB reverse mappings on `R52X30G5TNB`; the live USB session authenticated as loopback, received display config `2800x1752`, initialized the HEVC decoder, and sustained at least 6,180 decoded inputs with `dropped=0`; `git diff --check` passed before the final documentation update
+- `evidence`: the wireless repair UI visibly exposes primary **Reconnect** and secondary **Scan QR instead**; both the Android shell and a temporary plain Mac TCP listener timed out across the current WiFi path, while the Mac listener was healthy and the USB path delivered frames, isolating the remaining wireless blocker below the app protocol
+- `blocker`: the current WiFi path is client-isolated or otherwise blocks peer-to-peer TCP/Bonjour despite both endpoints being in `10.0.0.0/18`; no Android or Mac application change can bridge that access-point policy. Wireless remains unproven until both devices use a non-isolated SSID or client isolation is disabled
+- `cleanup`: the Mac SideScreen listener and the working USB stream were left running; only task-created APK backups and the temporary device-side pairing backup remain to be reviewed; no source, pairing token, unrelated file, commit, push, PR, workflow, or Actions state was removed or published
+- `git`: local topic-branch changes only; no commit, push, PR, merge, default-branch, workflow, or Actions mutation
+- `next`: remove only the temporary `.codex-old` device pairing backup, rerun the final build/check and project-memory doctor, and retry wireless on a peer-reachable WiFi path; do not force QR scanning or claim wireless completion from the USB proof
+- `learning_checkpoint`: `promoted`: transport verification must include a plain peer TCP probe in addition to app logs, and a same-subnet address does not prove peer reachability; `quarantined`: whether the earlier one-off TCP probe used a transient non-isolated path; `skipped`: router configuration changes, publication, and global memory update
+- `rollout_refs`: current Codex session
+
+## 2026-09-09 — Per-network socket factory fallback and wireless boundary correction
+
+- `scope`: Android wireless video/control route selection, installed reconnect UI, fresh Mac listener restart, and current Wi-Fi acceptance evidence
+- `baseline`: canonical `/Users/tejas/Projects/SideScreen` on `codex/wireless-60fps-native`; user-confirmed wired transport is good, so wireless is the only acceptance target
+- `changed`: `AndroidClient/app/src/main/java/com/sidescreen/app/StreamClient.kt` and `ControlChannel.kt` now try Android's per-network `Network.socketFactory` before process-default and legacy `bindSocket` routes; `MacHost/Sources/SettingsWindow.swift` clarifies that a local Wi-Fi address does not prove peer reachability; added `docs/troubleshooting/wireless-reconnect-2026-09-09.md`; corrected the changelog route description
+- `validation`: `(cd AndroidClient && ./gradlew testDebugUnitTest assembleDebug --no-daemon)` passed with 37 tests and 0 failures; the installed debug APK SHA-256 is `5d5298eccd5d09592eb83e495e8a5d5b03cd7db8659bf56ee353dc0d74b47ec6`; the live Android retry logged WiFi-factory, default, and WiFi-bind route timeouts; a fresh Mac stop/start recreated the Wireless listener on `54321`/`54322`; local Mac TCP connects succeed; `git diff --check` passed
+- `evidence`: installed Android UI visibly retains the saved pairing and exposes primary **Reconnect** plus secondary **Scan QR instead**; a current Android-to-Mac TCP probe timed out on both SideScreen ports; Mac-to-tablet ADB TCP and `nmap` probes also show filtered peer ports; Bonjour found no service; macOS firewall rules already permit the SideScreen app and executable; no new wireless auth or video-frame session was observed
+- `blocker`: current live Wi-Fi peer traffic is filtered or otherwise unavailable despite same-subnet addresses; the exact access-point policy is not identified, and an earlier probe reached the Mac, so the environment diagnosis remains quarantined as current-path evidence rather than a universal claim. Wireless implementation and installed recovery UX are proven; wireless live/user acceptance is not
+- `cleanup`: restored the tablet ADB daemon to USB mode after the wireless-debugging probe; no pairing, token, source checkout, backup, commit, push, PR, workflow, or Actions state was deleted or published
+- `git`: local topic-branch changes only; no default-branch, PR, merge, workflow, or Actions mutation
+- `next`: retry the installed APK on a peer-reachable Wi-Fi path and capture the first authenticated LAN connection, display config, first keyframe, and sustained wireless frame stats; do not use the working USB session as the wireless acceptance proof
+- `learning_checkpoint`: `promoted`: Android wireless sockets should use `Network.socketFactory` as the primary explicit-network API with compatibility fallbacks; `quarantined`: current SSID's exact filtering policy and the earlier transient reachability discrepancy; `skipped`: firewall weakening, router mutation, global memory update, publication, and default-branch integration
+- `rollout_refs`: current Codex session
+
+## 2026-09-09 — Exact installed host/APK wireless retry
+
+- `scope`: rebuild and install the current macOS host, restart it in Wireless mode, and retry the current paired Android client
+- `changed`: installed `/Users/tejas/Applications/SideScreen.app` from the rebuilt universal bundle; no pairing reset or USB fallback was used
+- `validation`: `swift test --package-path MacHost` passed 63 tests with 0 failures; `./scripts/build_mac.sh` produced and signed the universal host/DMG; `./scripts/install_mac.sh --launch` installed and code-sign verified the host; the Mac log shows Wireless mode, Bonjour advertisement, and listeners ready on `54321`/`54322`; the installed Android 0.11.2 client retried WiFi-factory, default, and WiFi-bind routes
+- `evidence`: the exact installed host and APK still produce three TCP timeouts with no Mac wireless connection, while the Android UI remains on the recoverable `RECONNECT` / `SCAN QR INSTEAD` repair state
+- `blocker`: current Wi-Fi peer traffic remains filtered or otherwise unavailable; no authenticated wireless handshake, first keyframe, or sustained wireless frame evidence exists on this SSID
+- `cleanup`: host is left running in Wireless mode; tablet is left on the paired wireless repair screen; no token, pairing, source, or unrelated app data was removed; no commit, push, PR, workflow, or Actions mutation
+- `next`: move only the two devices to a peer-reachable Wi-Fi path (or disable client isolation), then tap `RECONNECT` and capture the live wireless handshake/frame proof
+- `learning_checkpoint`: `promoted`: final acceptance must use the exact installed host and APK together; `quarantined`: current SSID policy; `skipped`: USB as an acceptance substitute, firewall weakening, router mutation, publication, and global memory update
+- `rollout_refs`: current Codex session
