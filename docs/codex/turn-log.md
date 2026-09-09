@@ -151,3 +151,16 @@
 - `next`: visually confirm the streamed wired desktop/colors; if the user reports a remaining mismatch, capture paired host/tablet pixel samples while this same live path is connected
 - `learning_checkpoint`: `promoted`: the prior no-device state was an external USB enumeration condition, and the repaired SDK-first pipeline installs/forwards correctly once the device appears; `quarantined`: none; `skipped`: UI redesign and global memory update
 - `rollout_refs`: current Codex session
+
+## 2026-09-08 — Restore menu-bar tablet brightness control
+
+- `scope`: compact macOS status-item menu, Android BRIGHT control path, and installed wired session
+- `changed`: restored the compact AppKit Tablet Brightness slider in `MacHost/Sources/BrightnessMenuItemView.swift`; added persisted host-side level handling in `MacHost/Sources/NativeBrightnessController.swift`; reconnected the slider and reconnect replay in `MacHost/Sources/AppDelegate.swift`; queued the latest value in `MacHost/Sources/StreamingServer.swift` until Android brightness capability negotiation; added `NativeBrightnessControllerTests`; documented the user-facing control in `README.md` and `CHANGELOG.md`
+- `validation`: `swift test --package-path MacHost` passed 63 tests with 0 failures; `git diff --check` passed; `./scripts/build_mac.sh` produced a signed universal app and DMG; `/Users/tejas/Applications/SideScreen.app` was replaced and relaunched with 0 stale snapshots; the connected SM-X800 remained on ADB with reverse ports `54321` and `54322`; Android diagnostics recorded `CC: BRIGHT command` followed by `BRT: backlight applied` across slider values; the user confirmed the restored control works
+- `evidence`: source, tests, signed package, installed host, live BRIGHT delivery, Android backlight application, and user-confirmed menu behavior are proven; sustained stream quality remains covered by the prior wired validation entry
+- `blocker`: none
+- `cleanup`: preserved the replaced installed app at `/Users/tejas/Documents/SideScreen-Backups.noindex/20260908T200700Z/installed-app/SideScreen.app`; retained all prior app/DMG backups; no source checkout, duplicate bundle, Trash item, or unrelated file was removed
+- `git`: Mac-side source and documentation are ready for the already-authorized `codex/wireless-60fps-native` topic branch; no default-branch, PR, workflow, or Actions mutation
+- `next`: keep the compact menu unchanged; only revisit brightness behavior if a user reports Android panel-specific range or permission differences
+- `learning_checkpoint`: `promoted`: menu brightness should use the existing capability-gated control channel and queue the latest value across startup negotiation; `quarantined`: none; `skipped`: broad UI redesign, keyboard event taps, and global memory update
+- `rollout_refs`: current Codex session
