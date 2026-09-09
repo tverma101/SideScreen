@@ -231,3 +231,16 @@
 - `next`: move only the two devices to a peer-reachable Wi-Fi path (or disable client isolation), then tap `RECONNECT` and capture the live wireless handshake/frame proof
 - `learning_checkpoint`: `promoted`: final acceptance must use the exact installed host and APK together; `quarantined`: current SSID policy; `skipped`: USB as an acceptance substitute, firewall weakening, router mutation, publication, and global memory update
 - `rollout_refs`: current Codex session
+
+## 2026-09-09 — Publish all local Android APK snapshots from today
+
+- `scope`: Git publication of the local Android APK recovery snapshots created on 2026-09-09
+- `changed`: committed the eight dated `backups/apk/20260909T*/` snapshots, including 16 APK artifacts and their 8 manifests; no source files were changed in this publication step
+- `validation`: all 16 staged APK files were SHA-256 hashed before commit; `git diff --cached --check` passed; commit `6d322b7` was pushed to `origin/codex/wireless-60fps-native` together with the prior local source checkpoint `a90daa1`
+- `evidence`: the APK artifacts and provenance manifests are committed and remotely published; the live tablet remains installed with the separately verified 2026-09-08 APK rollback
+- `blocker`: none for this publication request
+- `cleanup`: no local APK or backup was deleted; the repository backup history remains recoverable
+- `git`: topic branch pushed from `b03dd6b` to `6d322b7`; no default-branch, PR, workflow, or Actions mutation
+- `next`: use the published manifest SHA-256 values when selecting a known APK for future rollback
+- `learning_checkpoint`: `promoted`: APK recovery snapshots are published with their manifests when explicitly requested; `quarantined`: none; `skipped`: source rebuild, APK reinstall, and global memory update
+- `rollout_refs`: current Codex session
