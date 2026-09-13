@@ -352,3 +352,15 @@
 - `next_action`: continue using USB; if spikes return, collect paired host/Android counters and verify the serial-scoped ADB path before changing transport code
 - `learning_checkpoint`: `promoted`: ADB transport identity must be explicit whenever USB and Wi-Fi ADB coexist, and live transport proof should stop repair polling; `quarantined`: persisted 120-Hz setting as a separate performance variable; `skipped`: wireless acceptance, settings changes, and publication
 - `rollout_refs`: current Codex session
+
+## 2026-09-13 — Publish current source, APK, and macOS app artifacts
+
+- `scope`: commit and publish the complete current SideScreen source checkpoint plus freshly rebuilt Android and macOS artifacts
+- `changed`: committed the reviewed Android wireless/reconnect code, macOS transport isolation, USB ADB serial scoping, regression tests, scripts, README/changelog, and performance documentation in `a834282`; published versioned artifacts under `artifacts/SideScreen-0.11.2/` in `2e2dbb4`
+- `artifacts`: `SideScreen-0.11.2-android-debug.apk`, signed universal `SideScreen.app`, `SideScreen-0.11.2-mac-universal.dmg`, and `MANIFEST.txt` with source revision and SHA-256 values
+- `validation`: Android `testDebugUnitTest assembleDebug` passed; macOS `swift test --package-path MacHost` passed 69/69; the app bundle passed deep strict code-signature verification and contained `x86_64` plus `arm64`; `hdiutil verify` reported the DMG checksum valid; staged diffs passed `git diff --cached --check`
+- `evidence_state`: source committed and artifacts locally committed; fresh builds and artifact integrity are proven; no APK reinstall or new live wireless acceptance was performed in this publication turn
+- `git`: source commit `a834282`, artifact commit `2e2dbb4`, and this record are on `codex/wireless-60fps-native`; push is the remaining publication step; no default-branch, PR, workflow, or Actions mutation
+- `next`: verify the remote branch tip and artifact paths after the push
+- `learning_checkpoint`: `promoted`: versioned artifact bundles with a source-commit manifest keep APK and macOS binaries auditable; `quarantined`: none; `skipped`: wireless re-acceptance, APK installation, release tagging, and global memory update
+- `rollout_refs`: current Codex session
