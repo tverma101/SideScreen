@@ -244,3 +244,111 @@
 - `next`: use the published manifest SHA-256 values when selecting a known APK for future rollback
 - `learning_checkpoint`: `promoted`: APK recovery snapshots are published with their manifests when explicitly requested; `quarantined`: none; `skipped`: source rebuild, APK reinstall, and global memory update
 - `rollout_refs`: current Codex session
+
+## 2026-09-11 — Home-network wireless reconnect repair
+
+- `scope`: SideScreen Android wireless recovery UX and transport on the normal home Wi-Fi network
+- `project`: `/Users/tejas/Projects/SideScreen`
+- `baseline`: branch `codex/wireless-60fps-native`, remote `origin/codex/wireless-60fps-native`; preserved pairing and unrelated work; cached IPv4 endpoint was stale
+- `changed`: Android now presents Reconnect first for saved pairings, keeps QR as a secondary re-pair action, discovers/persists multiple IPv4/IPv6 host addresses, tries candidates on the active Wi-Fi, and aligns the control socket with the successful video host; Mac pairing QR/address advertisement is dual-stack; Private Link/LocalOnlyHotspot recovery was removed
+- `validation`: Android `./gradlew testDebugUnitTest assembleDebug --no-daemon` passed; `swift test --package-path MacHost` passed 65 tests with 0 failures; `./scripts/build_mac.sh` and `./scripts/install_mac.sh --launch` passed; `git diff --check` passed
+- `evidence`: installed APK SHA-256 `d65fb54c40bbc2d9382bea5faeef1df66c6a4016de5a9b9e1b8978ae758f10e5`; live tablet UI exposed `RECONNECT`; Bonjour recovered four endpoints; IPv6 video handshake returned `OK`; sustained live capture reached 1,080 frames with `dropped=0` and continuous control PONGs
+- `evidence_state`: implemented/tested/installed/live proven; user-confirmed not yet obtained
+- `blocker`: none on the observed home-network session; peer-isolated or Bonjour-blocking SSIDs remain an environmental limitation
+- `cleanup`: no pairing reset or destructive cleanup; host and tablet left connected; generated build output remains local; no commit or push in this turn
+- `next_action`: user can retry with Reconnect; if publication is wanted, stage only the audited source/docs paths and commit/push the topic branch after explicit authorization
+- `rollout_refs`: current Codex session
+- `learning_checkpoint`: `promoted`: saved-pairing recovery needs dual-stack candidate persistence and successful-host control rebinding; `quarantined`: universal behavior on isolated SSIDs; `skipped`: private hotspot/relay, router mutation, and Git publication
+
+## 2026-09-11 — Paused wireless efficiency implementation checkpoint
+
+- `scope`: Mac capture/encode/transport efficiency, Android display/decoder power behavior, and a live wireless 60-FPS A/B run on the representative SM-X800
+- `project`: `/Users/tejas/Projects/SideScreen`
+- `baseline`: canonical branch `codex/wireless-60fps-native`; existing dirty SideScreen work was preserved; no commit, push, PR, workflow, or Actions mutation was authorized or performed
+- `changed`: Android removed the unconditional partial CPU wake lock and idle `KEEP_SCREEN_ON` flag, scopes the display-awake flag to an active stream, applies a native 60-Hz `Surface.setFrameRate` hint, bounds transient frame pooling, and limits wireless read-ahead; Mac added default-on no-client capture sleep, a dedicated high-priority capture queue, a four-surface ScreenCaptureKit queue, idle-frame suppression, transport diagnostics, and the zero-headroom metadata guard; `CHANGELOG.md`, `README.md`, `docs/wireless-60fps.md`, and this record were updated
+- `validation`: Android `testDebugUnitTest assembleDebug --no-daemon` passed with 46 tasks and no failures; Mac `swift test --package-path MacHost` passed 66 tests with 0 failures after the zero-headroom guard; earlier release builds produced a signed universal host and the Android debug APK; `git diff --check` passed before this documentation update; the final release rebuild was intentionally interrupted during the x86_64 stage at the user's pause request
+- `live_evidence`: the previously installed diagnostic host/APK connected over the home Wi-Fi IPv6 route; Android logged `Frame-rate hint: 60.0Hz`, a hardware HEVC decoder supporting `2800x1752 @60fps`, read-loop callbacks around 3 ms, zero decoder drops, and roughly 12 ms decode latency; Mac logged 60-Hz ScreenCaptureKit callbacks with `idle` no-pixel metadata and zero VideoToolbox errors; the same run exposed the false-positive pressure condition with `tcpAvailable=0`, `pressureSkips` rising while only one send remained in flight, and host pipeline output below the 60-FPS target
+- `evidence_state`: implemented/source-tested proven; prior diagnostic build installed/live proven for the idle-frame and Android power/display changes; the zero-headroom guard source-tested but not installed/live; user-confirmed visual quality and sustained 60-FPS acceptance remain unproven
+- `blocker`: pause requested before installing the final zero-headroom build, so the remaining live A/B result is intentionally pending rather than claimed complete
+- `cleanup`: terminated the in-progress build with no source loss; stopped the SideScreen host and force-stopped the Android client; retained the APK provenance backup at `/Users/tejas/Projects/SideScreen/backups/apk/20260911T180528Z`; no pairing, token, source, or unrelated data was removed
+- `git`: local dirty work only; no staging, commit, push, merge, PR, default-branch, workflow, or Actions mutation
+- `next_action`: on explicit resume, rerun the release build from the current source, install the exact host/APK pair, reconnect over Wi-Fi, and verify `pressureSkips` no longer rises from zero headroom plus sustained host/Android 60-FPS evidence before making further changes
+- `learning_checkpoint`: `promoted`: ScreenCaptureKit idle callbacks must not be converted into cached keepalive encodes; `quarantined`: zero-valued Network.framework headroom behavior remains install/live-pending; `skipped`: further A/B tuning, router changes, publication, and global memory update
+- `rollout_refs`: current Codex session
+
+## 2026-09-11 — Wireless-only notes receiver color and frame-rate test
+
+- `scope`: test the pasted `jqssun/android-airplay-server`/UxPlay-based AirPlay receiver path only; wired SideScreen behavior and source were out of scope
+- `project`: `/Users/tejas/Projects/SideScreen`
+- `baseline`: canonical branch `codex/wireless-60fps-native` tracking `origin/codex/wireless-60fps-native`; existing dirty SideScreen work was preserved; no staging, commit, push, PR, workflow, or Actions mutation was authorized or performed
+- `changed`: no SideScreen source or APK was changed; the already-installed external `io.github.jqssun.airplay` v0.0.30 package was temporarily enabled/launched for the test, then its Developer options toggle was restored off and the package was disabled again to match the pre-test state
+- `validation`: Bonjour discovered the Android AirPlay receiver; macOS connected a virtual extended display at `2800x1752`, `1400x876 @ 60.00Hz`; Android Qualcomm decoder logs reported a 60-FPS source but an observed work rate oscillating roughly `28–54/s` with a latest sustained average near `42.5/s`; the receiver sampled at about `51.8%` CPU and `306 MB` PSS including about `244 MB` EGL graphics allocation; repeated `EglImage dataspace changed, need recreate` messages were observed; the receiver was force-stopped and macOS no longer reported the Android virtual display; `git diff --check` passed
+- `evidence_state`: notes receiver installed/live/connected and the negotiated display mode are proven; lag is objectively supported by decoder work-rate evidence; the user-reported color error is corroborated by the receiver's forced SDR/limited-range source defaults and dataspace churn as likely contributors, not yet isolated by an A/B toggle; sustained 60-FPS output and user-confirmed color acceptance remain unproven; wired path untouched
+- `result`: the wireless path is materially improvable; likely high-value follow-ups are a reversible SDR/color-range A/B and a wireless-only direct `MediaCodec` output-surface path with the existing GL path retained as fallback, while keeping bounded frame dropping enabled
+- `cleanup`: restored the external receiver's Developer options toggle, force-stopped it, restored its pre-test disabled-user state, and verified the virtual display disconnected; no SideScreen pairing, token, source, or unrelated data was removed
+- `next_action`: only on explicit implementation request, run the color A/B with debug frame statistics, then prototype and benchmark direct decode-to-display for the wireless receiver without changing wired code
+- `learning_checkpoint`: `promoted`: negotiated 60-Hz display mode is not sufficient evidence of 60-FPS receiver output; `quarantined`: forced SDR and EGL dataspace recreation as root causes until isolated by A/B; `skipped`: SideScreen source edits, wired tests, APK upgrade to upstream v0.0.31, router changes, and Git publication
+- `rollout_refs`: current Codex session
+
+## 2026-09-11 — Roll back USB lag regression while preserving wireless work
+
+- `scope`: restore the wired USB/ADB runtime after the user reported new lag; keep the wireless reconnect and efficiency implementation intact
+- `project`: `/Users/tejas/Projects/SideScreen`
+- `baseline`: canonical branch `codex/wireless-60fps-native` tracking `origin/codex/wireless-60fps-native`; the working tree already contained the user's local wireless changes and was preserved; no broad reset or staging was used
+- `changed`: gated the wireless `.bestEffort` listener, dedicated capture queue, idle-frame behavior, encoder diagnostics/pressure, Android frame-rate hint, and frame-pool bound to wireless; restored USB `.interactiveVideo`, legacy capture queue/cached-frame fallback, USB wake lock, and unrestricted USB frame pooling; added the wired-regression troubleshooting record and clarified the transport boundary in project docs
+- `validation`: Mac Swift tests passed 66/66; Android unit tests passed; release host rebuilt, signed, installed, and launched; debug APK rebuilt and installed over USB; ADB reverse ports `54321`/`54322` were present; macOS showed `Active Client Connected`; Android sustained about 60 decoder inputs per second with about 12 ms average latency and zero drops after startup
+- `evidence_state`: implemented/tested/installed/live/user-confirmed proven for wired USB; wireless source work remains preserved but was not re-accepted in this turn
+- `root_cause`: the recent wireless efficiency edits were applied to shared USB paths; the exact individual contributor was not isolated because the rollback restored the affected USB behavior as a bundle
+- `cleanup`: left the validated host/tablet USB session running; retained the installer's APK backup; no pairing, token, source, or unrelated data was removed
+- `git`: local dirty topic-branch work only; no staging, commit, push, merge, PR, default-branch, workflow, or Actions mutation
+- `next_action`: user can continue using USB; if lag reappears, capture paired host/Android counters before any further transport change
+- `learning_checkpoint`: `promoted`: transport-specific efficiency changes must be explicitly gated so wireless tuning cannot alter the USB latency path; `quarantined`: exact single USB lag contributor; `skipped`: wireless re-test and publication
+- `rollout_refs`: current Codex session
+
+## 2026-09-11 — Compare archived Android APKs for wired spikes
+
+- `scope`: read-only comparison of the nearest archived SideScreen Android APKs; no install, revert, source edit, or transport change
+- `project`: `/Users/tejas/Projects/SideScreen`
+- `baseline`: canonical topic branch `codex/wireless-60fps-native`; preserved the existing 33-path dirty worktree; current installed package is version `0.11.2` / code `1102` with last update `2026-09-11 15:08:45`
+- `inspected`: APK snapshots from 2026-09-08, 2026-09-09, and 2026-09-11; SHA-256 manifests, ZIP entries, DEX hashes, JADX output for the app transport/decoder classes, and the APK install chain
+- `result`: the last older APK recorded as installed is `5d5298eccd5d09592eb83e495e8a5d5b03cd7db8659bf56ee353dc0d74b47ec6` from `backups/apk/20260909T195154Z`; the clean pre-September-9 baseline is `535913fd2ded8da591d4d25ac89ea98ee7d4bcfad3f64dd743a7e89ef6f865a6` from `backups/apk/20260908T213430Z`; no September 10 snapshot exists
+- `finding`: decoder and renderer logic is semantically unchanged; today's APK removes the startup partial wake lock and adds a connection-time `Surface.setFrameRate` hint that also runs for wired sessions; other differences are wireless-only recovery/routing/pooling work
+- `validation`: all cited hashes match their manifests; current USB package identity was read with `adb -s R52X30G5TNB shell dumpsys package`; no APK was installed or reverted
+- `evidence_state`: archive contents, hashes, install chain, and code-level comparison proven; which APK is visually smooth remains user-confirmation pending
+- `blocker`: APK comparison alone cannot isolate host-side ADB reverse/status churn or prove visual smoothness
+- `cleanup`: JADX output was written only under `/tmp`; repository source, installed package, pairing, and runtime state were left unchanged
+- `git`: no staging, commit, push, PR, workflow, or Actions mutation
+- `next_action`: if the user authorizes an A/B, install only the selected archived APK and capture paired Mac/Android frame counters; otherwise keep the comparison-only state
+- `learning_checkpoint`: `promoted`: use the manifest install chain to distinguish a merely built APK from the last APK actually installed; `quarantined`: frame-rate hint and wake-lock differences as the sole wired cause; `skipped`: APK install, rollback, and source changes
+- `rollout_refs`: current Codex session
+
+## 2026-09-11 — Revert tablet to the last Sep 9 APK
+
+- `scope`: restore the Android tablet to the last Sep 9 APK recorded as installed; preserve today's broken APK for comparison
+- `project`: `/Users/tejas/Projects/SideScreen`
+- `baseline`: canonical topic branch `codex/wireless-60fps-native`; current USB transport `R52X30G5TNB`; today's installed APK was preserved at `backups/apk/20260911T190836Z` with SHA-256 `433ee2d0413f40efeb4252b6407f7f78099d10e414ae2a30de59d578f46d0e6a`; existing dirty worktree was preserved
+- `changed`: installed `backups/apk/20260909T195154Z/source-debug__app-debug.apk` with SHA-256 `5d5298eccd5d09592eb83e495e8a5d5b03cd7db8659bf56ee353dc0d74b47ec6` using `adb -s R52X30G5TNB install -r`; no source or archive deletion
+- `validation`: ADB streamed install returned `Success`; the installed `/data/app/.../base.apk` SHA-256 was `5d5298eccd5d09592eb83e495e8a5d5b03cd7db8659bf56ee353dc0d74b47ec6`, exactly matching the Sep 9 archive; post-state reported version `0.11.2`, code `1102`, last update `2026-09-11 18:23:41`, code path under `/data/app`, and existing data directory `/data/user/0/com.sidescreen.app`
+- `evidence_state`: target APK install proven; app-data preservation is supported by the `-r` install and unchanged package data directory; visual smoothness and user-confirmed recovery remain pending
+- `blocker`: none for the requested APK revert; a live wired playback check is still needed to confirm whether the Sep 9 build removes the observed spikes
+- `cleanup`: no uninstall, `pm clear`, pairing reset, source reset, APK deletion, or unrelated cleanup
+- `git`: local dirty topic-branch work only; no staging, commit, push, merge, PR, default-branch, workflow, or Actions mutation
+- `next_action`: exercise the reverted APK over wired USB and compare paired host/Android counters before considering any source change
+- `learning_checkpoint`: `promoted`: retain the known-broken APK and select rollback candidates from the archived install provenance chain; `quarantined`: Sep 9 visual smoothness until user confirmation; `skipped`: source rollback, wireless changes, and Git publication
+- `rollout_refs`: current Codex session
+
+## 2026-09-11 — Repair Mac-side USB ADB and transport churn
+
+- `scope`: isolate and fix recurring wired lag after the Sep 9 APK rollback; keep wireless changes separate
+- `project`: `/Users/tejas/Projects/SideScreen`
+- `baseline`: canonical branch `codex/wireless-60fps-native`; both physical USB and Wi-Fi ADB transports were online; existing dirty SideScreen work was preserved
+- `changed`: require `usb:` metadata when selecting a physical ADB device; scope reverse-list/setup commands to the selected serial; suppress repeated ADB polling while a USB stream is live; carry explicit session transport mode through server, capture, and encoder policy; update shell helpers and add `StatusDetectorTests`
+- `validation`: focused status tests passed 3/3; full Mac Swift suite passed 69/69; shell syntax and `git diff --check` passed; mixed ADB listing selected `R52X30G5TNB`; rebuilt/signed/installed host launched; live USB pipeline reported roughly 66–72 FPS with 9–15 ms average frame age and zero drops, and Android reported zero decoder drops
+- `evidence_state`: implemented/tested/installed/live/user-confirmed proven for wired USB; wireless was not re-accepted in this turn
+- `root_cause`: unscoped ADB calls failed with `more than one device/emulator` when Wi-Fi ADB was also online; the host treated the failed probe as a missing bridge and retried reverse setup during playback, adding Mac-side churn
+- `blocker`: none observed; the saved USB 120-Hz refresh setting was left unchanged and is a separate future variable
+- `cleanup`: rebuilt and relaunched the host; left the validated USB session running; retained APK archives; no pairing, token, source, or unrelated data was removed
+- `git`: local dirty topic-branch work only; no staging, commit, push, merge, PR, default-branch, workflow, or Actions mutation
+- `next_action`: continue using USB; if spikes return, collect paired host/Android counters and verify the serial-scoped ADB path before changing transport code
+- `learning_checkpoint`: `promoted`: ADB transport identity must be explicit whenever USB and Wi-Fi ADB coexist, and live transport proof should stop repair polling; `quarantined`: persisted 120-Hz setting as a separate performance variable; `skipped`: wireless acceptance, settings changes, and publication
+- `rollout_refs`: current Codex session
